@@ -9,6 +9,7 @@ authors = [
   { name = "Hiroki Teranishi", email = "teranishi.hiroki@gmail.com" },
 ]
 dependencies = [
+  "jinja2",
   "pyyaml",
   "referencing>=0.35.0",
 ]

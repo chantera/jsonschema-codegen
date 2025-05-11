@@ -1,0 +1,7 @@
+class {{ name }}:
+    {% if not fields %}
+    pass
+    {% endif %}
+    {% for field in fields %}
+    {{ field.name }}: {{ field.type.hint }}
+    {% endfor %}
