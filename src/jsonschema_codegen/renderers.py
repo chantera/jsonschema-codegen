@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from jinja2 import Environment, FileSystemLoader
 
-from jsonschema_codegen.exprs import ObjectType, TypeExpr
+from jsonschema_codegen.exprs import AnnotatedType, ObjectType, TypeExpr
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -24,6 +24,19 @@ class Renderer:
 
     def render(self, expr: TypeExpr) -> str:
         raise NotImplementedError
+
+
+class AnnotationRenderer(Renderer):
+    TEMPLATE_NAME = "annotation.jinja2"
+
+    def render(self, expr: TypeExpr) -> str:
+        if not isinstance(expr, AnnotatedType):
+            raise TypeError(f"Expected `AnnotatedType`, got `{type(expr).__name__}`")
+
+        return self.template.render(
+            name=expr.name,
+            annotation=expr.annotation,
+        )
 
 
 class ObjectRenderer(Renderer):
