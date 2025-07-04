@@ -1,0 +1,76 @@
+from pathlib import Path
+from typing import Iterator
+
+from jsonschema_codegen.exprs import AnnotatedType, Annotation, ObjectType, TypeExpr, UnionType
+from jsonschema_codegen.renderers import AnnotationRenderer, ObjectRenderer
+
+
+class Generator:
+    def __init__(self, template_dir: str | Path | None = None):
+        self._exprs: dict[str, TypeExpr] = {}
+        self._imports: set[str] = set()
+        self.renderers = {
+            AnnotatedType: AnnotationRenderer(template_dir),
+            UnionType: AnnotationRenderer(template_dir),
+            ObjectType: ObjectRenderer(template_dir),
+        }
+
+    def clear(self):
+        self._exprs = {}
+        self._imports = set()
+
+    def add(self, expr: TypeExpr):
+        subtypes = None
+        if isinstance(expr, AnnotatedType):
+            imports: list[str] = []
+            subtypes = list(_iter_annotated_exprs(expr.value, imports))
+            self._imports.update(imports)
+        elif isinstance(expr, ObjectType):
+            assert expr.name
+            subtypes = [field.type for field in expr.fields]
+
+        # add subtypes first for resolving dependencies
+        if subtypes:
+            for subtype in subtypes:
+                self.add(subtype)
+
+        if expr.name:
+            # TODO: check duplicate
+            self._exprs[expr.name] = expr
+
+    def generate(self) -> str:
+        buf = []
+
+        imports = []
+        for module_str in self._imports:
+            imports.append(f"import {module_str}\n")
+        buf.append("".join(imports))
+
+        for expr in self._exprs.values():
+            buf.append(self._render(expr))
+
+        return "\n".join(buf)
+
+    def _render(self, expr: TypeExpr) -> str:
+        renderer = self.renderers.get(type(expr))
+        if not renderer:
+            raise TypeError(f"Unsupported type: {type(expr).__name__}")
+        return renderer.render(expr)
+
+
+def generate(expr: TypeExpr, template_dir: str | Path | None = None) -> str:
+    generator = Generator(template_dir)
+    generator.add(expr)
+    return generator.generate()
+
+
+def _iter_annotated_exprs(value: Annotation, imports: list[str]) -> Iterator[TypeExpr]:
+    if isinstance(value, TypeExpr):
+        yield value
+    elif isinstance(value, tuple):
+        yield from _iter_annotated_exprs(value[0], imports)
+        for v in value[1]:
+            yield from _iter_annotated_exprs(v, imports)
+    else:  # str
+        if "." in value:
+            imports.append(value.rsplit(".", maxsplit=1)[0])

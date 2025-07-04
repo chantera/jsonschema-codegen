@@ -2,7 +2,7 @@ from dataclasses import InitVar, asdict, dataclass, field, fields
 from functools import cached_property
 import hashlib
 import json
-from typing import Any
+from typing import Any, Union
 
 
 class _MISSING_TYPE:
@@ -23,7 +23,8 @@ class TypeExpr:
         raise NotImplementedError
 
 
-Annotation = str | TypeExpr | tuple["Annotation", list["Annotation"]]
+Annotation = Union[str, TypeExpr, "ParameterizedAnnotation"]
+ParameterizedAnnotation = tuple[Annotation, list[Annotation]]  # e.g., Union[int, float]
 
 
 def _resolve_annotation(value: Annotation) -> str:
