@@ -5,7 +5,7 @@ from jsonschema_codegen.exprs import AnnotatedType, Annotation, ObjectType, Type
 from jsonschema_codegen.renderers import AnnotationRenderer, ObjectRenderer
 
 
-class Generator:
+class CodeGenerator:
     def __init__(self, template_dir: str | Path | None = None):
         self._exprs: dict[str, TypeExpr] = {}
         self._imports: set[str] = set()
@@ -36,15 +36,20 @@ class Generator:
 
         if expr.name:
             # TODO: check duplicate
+            assert expr.name not in self._exprs
             self._exprs[expr.name] = expr
 
     def generate(self) -> str:
+        if not self._exprs:
+            return ""
+
         buf = []
 
         imports = []
         for module_str in self._imports:
             imports.append(f"import {module_str}\n")
-        buf.append("".join(imports))
+        if imports:
+            buf.append("".join(imports))
 
         for expr in self._exprs.values():
             buf.append(self._render(expr))
@@ -59,7 +64,7 @@ class Generator:
 
 
 def generate(expr: TypeExpr, template_dir: str | Path | None = None) -> str:
-    generator = Generator(template_dir)
+    generator = CodeGenerator(template_dir)
     generator.add(expr)
     return generator.generate()
 
