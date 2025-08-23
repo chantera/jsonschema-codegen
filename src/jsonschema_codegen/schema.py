@@ -1,6 +1,9 @@
 from collections.abc import Mapping
+from enum import StrEnum
 from functools import cached_property
+import json
 from pathlib import Path
+from typing import Callable
 from urllib.parse import urljoin
 from urllib.request import urlopen
 
@@ -9,21 +12,29 @@ import referencing.jsonschema
 import yaml
 
 
-def _retrieve(uri):
-    with urlopen(uri) as response:
-        return referencing.Resource.from_contents(
-            yaml.safe_load(response),
-            default_specification=referencing.jsonschema.DRAFT202012,
+def create_resolver(
+    schema: dict,
+    default_spec: referencing.Specification | str | None = None,
+    base_uri: str | None = None,
+    retrieve: Callable[[str], dict] | None | bool = None,
+):
+    if retrieve:
+        initial_registry = referencing.Registry(
+            retrieve=_create_retriever(  # type: ignore[call-arg]
+                _default_retrieve if retrieve is True else retrieve, default_spec
+            )
         )
+    else:
+        initial_registry = referencing.Registry()
 
+    resource = _create_resource(schema, default_spec)
 
-_DEFAULT_REGISTRY = referencing.Registry(retrieve=_retrieve)  # type: ignore
-
-
-def _create_resolver(schema: dict, base_uri: str = ""):
-    resource = referencing.jsonschema.DRAFT202012.create_resource(schema)
-    registry = _DEFAULT_REGISTRY.with_resource(base_uri, resource)
-    return registry.resolver(base_uri)
+    if base_uri is not None:
+        registry = initial_registry.with_resource(base_uri, resource)
+        return registry.resolver(base_uri)
+    else:
+        registry = resource @ initial_registry
+        return registry.resolver_with_root(resource)
 
 
 def _resolve_dict(data, resolver):
@@ -42,8 +53,11 @@ def _resolve_dict(data, resolver):
 
 class SchemaDict(Mapping):
     def __init__(self, data: dict, /, resolver=None, **kwargs):
-        if resolver is None and kwargs:
-            resolver = _create_resolver(data, **kwargs)
+        if not isinstance(data, dict):
+            raise TypeError(f"data must be a dict, got {type(data)}")
+        if resolver is None:
+            resolver = create_resolver(data, **kwargs)
+
         self.data = data
         self._resolved: dict | None = None
         self._resolver = resolver
@@ -93,8 +107,8 @@ class SchemaDict(Mapping):
     @classmethod
     def from_file(cls, path: str) -> "SchemaDict":
         p = Path(path).absolute()
-        with open(p) as file:
-            schema = yaml.safe_load(file)
+        with open(p) as f:
+            schema = yaml.safe_load(f) if path.endswith((".yaml", ".yml")) else json.load(f)
         return cls(schema, base_uri=p.as_uri())
 
 
@@ -107,3 +121,54 @@ def _schema_list(data: list, resolver):
             v = _schema_list(v, resolver=resolver)
         ret.append(v)
     return ret
+
+
+class SpecVersion(StrEnum):
+    DRAFT202012 = "draft202012"
+    DRAFT201909 = "draft201909"
+    DRAFT07 = "draft07"
+    DRAFT06 = "draft06"
+    DRAFT04 = "draft04"
+    DRAFT03 = "draft03"
+
+
+_SPECS = {
+    SpecVersion.DRAFT202012: referencing.jsonschema.DRAFT202012,
+    SpecVersion.DRAFT201909: referencing.jsonschema.DRAFT201909,
+    SpecVersion.DRAFT07: referencing.jsonschema.DRAFT7,
+    SpecVersion.DRAFT06: referencing.jsonschema.DRAFT6,
+    SpecVersion.DRAFT04: referencing.jsonschema.DRAFT4,
+    SpecVersion.DRAFT03: referencing.jsonschema.DRAFT3,
+}
+
+
+def _create_resource(
+    contents: dict, default_spec: referencing.Specification | str | None = None
+) -> referencing.Resource:
+    kwargs = {}
+    if default_spec is not None:
+        if isinstance(default_spec, str):
+            if default_spec not in _SPECS:
+                raise ValueError(f"Unknown specification: {default_spec}")
+            default_spec = _SPECS[default_spec]  # type: ignore[index]
+        kwargs["default_specification"] = default_spec
+
+    return referencing.Resource.from_contents(contents, **kwargs)
+
+
+def _create_retriever(
+    f: Callable[[str], dict], default_spec: referencing.Specification | str | None = None
+) -> Callable[[str], referencing.Resource]:
+    def retrieve(uri: str) -> referencing.Resource:
+        contents = f(uri)
+        return _create_resource(contents, default_spec)
+
+    return retrieve
+
+
+def _default_retrieve(uri: str) -> dict:
+    with urlopen(uri) as f:
+        if uri.endswith((".yaml", ".yml")):
+            return yaml.safe_load(f)
+        else:
+            return json.load(f)
