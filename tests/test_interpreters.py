@@ -1,13 +1,12 @@
 from jsonschema_codegen.exprs import AnnotatedType, Field, ObjectType, TypeExpr
 from jsonschema_codegen.parsers import create_parser
-from jsonschema_codegen.schema import SchemaDict
 
 
 def test_interpret():
     expected: TypeExpr
     parser = create_parser()
 
-    s = {
+    schema = {
         "type": "object",
         "properties": {
             "name": {"type": "string"},
@@ -21,9 +20,9 @@ def test_interpret():
             Field(name="price", type=AnnotatedType("int"), required=False),
         ],
     )
-    assert parser.parse(s) == expected
+    assert parser.parse(schema) == expected
 
-    s = {
+    schema = {
         # no explicit type
         "properties": {
             "name": {"type": "string"},
@@ -37,9 +36,9 @@ def test_interpret():
             Field(name="price", type=AnnotatedType("int"), required=False),
         ],
     )
-    assert parser.parse(s) == expected
+    assert parser.parse(schema) == expected
 
-    s = {
+    schema = {
         "type": "array",
         "items": {
             "type": "object",
@@ -48,9 +47,9 @@ def test_interpret():
     expected = AnnotatedType(
         value=("list", [ObjectType()]),
     )
-    assert parser.parse(s) == expected
+    assert parser.parse(schema) == expected
 
-    s = {
+    schema = {
         # no explicit type
         "items": {
             "type": "object",
@@ -59,13 +58,13 @@ def test_interpret():
     expected = AnnotatedType(
         value=("list", [ObjectType()]),
     )
-    assert parser.parse(s) == expected
+    assert parser.parse(schema) == expected
 
 
 def test_interpret_allOf():
     parser = create_parser()
 
-    s = {
+    schema = {
         "allOf": [
             {
                 "type": "object",
@@ -94,14 +93,14 @@ def test_interpret_allOf():
             Field(name="tags", type=AnnotatedType(("list", ["str"])), required=False),
         ],
     )
-    ret = parser.parse(SchemaDict(s))
+    ret = parser.parse(schema)
     assert ret == expected
 
 
 def test_interpret_oneOf():
     parser = create_parser()
 
-    s = {
+    schema = {
         "oneOf": [
             {"type": "string"},
             {"type": "integer"},
@@ -110,6 +109,6 @@ def test_interpret_oneOf():
     expected = AnnotatedType(
         value=("typing.Union", ["str", "int"]),
     )
-    ret = parser.parse(SchemaDict(s))
+    ret = parser.parse(schema)
     assert ret == expected
     assert ret.hint == "typing.Union[str, int]"
