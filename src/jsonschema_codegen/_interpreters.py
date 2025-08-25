@@ -237,12 +237,16 @@ def const(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
 
 
 def enum(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if _get_type(schema) == SchemaType.STRING:
-        # TODO: return EnumType
-        return expr
+    if not isinstance(expr, UndefinedType):
+        raise InterpretError("invalid enum schema", schema, "enum")
 
-    # TODO: return Literal
-    return expr
+    values = schema["enum"]
+    if not isinstance(values, list):
+        raise TypeError("enum must be a list")
+
+    # TODO: return EnumType when all values are str
+
+    return AnnotatedType(name=expr.name, value=("typing.Literal", [repr(v) for v in values]))
 
 
 def multipleOf(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
