@@ -56,15 +56,13 @@ class RefBasedNameResolver:
 
         context_schema = context.schema
         for index in context.path:
-            context_schema = context_schema[index]
+            context_schema = context_schema[index]  # type: ignore[index]
 
         if not isinstance(context_schema, SchemaDict) or context_schema.ref is None:
             return None
 
         _uri, fragment = urldefrag(context_schema.ref)
-        if fragment.startswith("/$defs"):
-            fragment = fragment[len("/$defs") :]
-        return fragment.replace("/", "") if fragment else None
+        return fragment.rsplit("/", 1)[-1] if fragment else None
 
 
 class MultiNameResolver:

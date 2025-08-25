@@ -1,7 +1,7 @@
-from jsonschema_codegen.schema import create_resolver
-
 import pytest
 import referencing.exceptions
+
+from jsonschema_codegen.schema import create_resolver
 
 
 def test_create_resolver():

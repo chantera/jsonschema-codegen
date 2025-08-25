@@ -38,7 +38,9 @@ class SchemaParser:
             object.__setattr__(self._refs[schema.ref], "value", expr)  # set actual reference
             return expr
 
-        expr = UndefinedType(name=self.resolver.resolve(schema, context) if self.resolver else None)
+        expr = UndefinedType(
+            name=self.resolver.resolve(schema, context) if self.resolver else None
+        )
 
         keys = set(schema.keys())
         for keyword, interpreter in self.interpreters.items():

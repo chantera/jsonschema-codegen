@@ -10,4 +10,4 @@ def unwrap(v: T | None, /) -> T:
 
 
 def snake_to_camel(s: str) -> str:
-    return "".join(x.capitalize() for x in s.split("_"))
+    return "".join(x[0].upper() + x[1:] if x else "" for x in s.split("_"))

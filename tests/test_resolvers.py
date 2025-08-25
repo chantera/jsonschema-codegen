@@ -29,7 +29,7 @@ def test_title_based_name_resolver():
 def test_property_name_resolver():
     resolver = PropertyNameResolver()
 
-    schema = {
+    schema: dict = {
         "title": "test object",
         "type": "object",
         "properties": {

@@ -3,7 +3,14 @@ from dataclasses import replace
 from enum import Enum
 
 from jsonschema_codegen.exceptions import InterpretError, NotSupportedError, SchemaError
-from jsonschema_codegen.exprs import AnnotatedType, Field, ObjectType, TypeExpr, UndefinedType, UnionType
+from jsonschema_codegen.exprs import (
+    AnnotatedType,
+    Field,
+    ObjectType,
+    TypeExpr,
+    UndefinedType,
+    UnionType,
+)
 from jsonschema_codegen.types import Context, Parser, Schema
 
 

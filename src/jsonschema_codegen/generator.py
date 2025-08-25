@@ -26,7 +26,10 @@ class CodeGenerator:
             subtypes = list(_iter_annotated_exprs(expr.value, imports))
             self._imports.update(imports)
         elif isinstance(expr, ObjectType):
-            assert expr.name
+            if not expr.name:
+                raise ValueError(
+                    f"ObjectType must have a name: fields={[f.name for f in expr.fields]}"
+                )
             subtypes = [field.type for field in expr.fields]
 
         # add subtypes first for resolving dependencies
