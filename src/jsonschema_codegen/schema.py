@@ -92,7 +92,8 @@ class SchemaDict(Mapping):
         return key in self._resolve()
 
     def __repr__(self):
-        return repr(self._resolved if self._resolved is not None else self.data)
+        content = repr(self._resolved if self._resolved is not None else self.data)
+        return f"SchemaDict({content})"
 
     def get(self, key, default=None):
         return self._resolve().get(key, default)

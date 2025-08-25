@@ -27,16 +27,6 @@ def _get_type(schema: Schema, default: SchemaType = SchemaType._ANY) -> SchemaTy
     return type_
 
 
-def _expected_type(schema: Schema, type_: SchemaType, strict: bool = False) -> bool:
-    detected_type_ = _get_type(schema)
-    if not strict and detected_type_ == SchemaType._ANY:
-        pass
-    elif detected_type_ != type_:
-        # TODO: show warning
-        return False
-    return True
-
-
 def _any_type(name: str | None = None) -> TypeExpr:
     return AnnotatedType(name=name, value="typing.Any")
 
@@ -94,12 +84,11 @@ def prefixItems(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
 
 
 def items(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if not _expected_type(schema, SchemaType.ARRAY):
-        return expr
+    if _get_type(schema, SchemaType.ARRAY) != SchemaType.ARRAY:
+        raise InterpretError("invalid array type", schema, "items")
 
     if _get_type(schema) == SchemaType._ANY:
-        if not isinstance(expr, UndefinedType):
-            raise InterpretError("invalid array type", schema, "properties")
+        assert isinstance(expr, UndefinedType)
 
     items_expr = parser.parse(schema["items"], Context(expr.name, schema, ["items"]))
     if items_expr is None:
@@ -116,12 +105,11 @@ def additionalProperties(parser: Parser, expr: TypeExpr, schema: Schema) -> Type
 
 
 def properties(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if not _expected_type(schema, SchemaType.OBJECT):
-        return expr
+    if _get_type(schema, SchemaType.OBJECT) != SchemaType.OBJECT:
+        raise InterpretError("invalid object type", schema, "properties")
 
     if _get_type(schema) == SchemaType._ANY:
-        if not isinstance(expr, UndefinedType):
-            raise InterpretError("invalid object type", schema, "properties")
+        assert isinstance(expr, UndefinedType)
     else:
         assert isinstance(expr, ObjectType)
 
@@ -319,8 +307,10 @@ def unevaluatedProperties(parser: Parser, expr: TypeExpr, schema: Schema) -> Typ
 
 
 def required(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if not isinstance(expr, ObjectType):
-        return expr
+    if _get_type(schema, SchemaType.OBJECT) != SchemaType.OBJECT:
+        raise InterpretError("invalid object type", schema, "required")
+
+    assert isinstance(expr, ObjectType)
 
     fields = {f.name: f for f in expr.fields}
     for prop in schema["required"]:
