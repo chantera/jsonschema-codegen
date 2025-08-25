@@ -1,9 +1,13 @@
-from typing import Iterable
+from typing import Iterable, Protocol
 from urllib.parse import urldefrag
 
 from jsonschema_codegen import _utils
 from jsonschema_codegen.schema import SchemaDict
-from jsonschema_codegen.types import Context, NameResolver, Schema
+from jsonschema_codegen.types import Context, Schema
+
+
+class NameResolver(Protocol):
+    def resolve(self, schema: Schema, context: Context | None) -> str | None: ...
 
 
 class NullNameResolver:
@@ -65,7 +69,7 @@ class RefBasedNameResolver:
         return fragment.rsplit("/", 1)[-1] if fragment else None
 
 
-class MultiNameResolver:
+class CombinedNameResolver:
     def __init__(self, resolvers: Iterable[NameResolver]):
         self.resolvers = list(resolvers)
 
@@ -76,3 +80,14 @@ class MultiNameResolver:
                 return name
 
         return None
+
+
+def default_resolver() -> NameResolver:
+    return CombinedNameResolver(
+        resolvers=[
+            RefBasedNameResolver(),
+            TitleBasedNameResolver(),
+            PropertyNameResolver(),
+            ArrayItemNameResolver(),
+        ]
+    )

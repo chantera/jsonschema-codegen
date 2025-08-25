@@ -19,7 +19,3 @@ class Parser(Protocol):
 
 
 Interpreter = Callable[[Parser, TypeExpr, Schema], TypeExpr]
-
-
-class NameResolver(Protocol):
-    def resolve(self, schema: Schema, context: Context | None) -> str | None: ...

@@ -2,11 +2,12 @@ from collections.abc import Mapping
 from logging import getLogger
 from typing import ClassVar
 
-from jsonschema_codegen import _interpreters, _resolvers
+from jsonschema_codegen import _interpreters
 from jsonschema_codegen.exceptions import NotSupportedError
 from jsonschema_codegen.exprs import AnnotatedType, TypeExpr, UndefinedType
+from jsonschema_codegen.resolvers import NameResolver, default_resolver
 from jsonschema_codegen.schema import SchemaDict
-from jsonschema_codegen.types import Context, Interpreter, NameResolver, Schema
+from jsonschema_codegen.types import Context, Interpreter, Schema
 
 logger = getLogger(__name__)
 
@@ -146,7 +147,7 @@ class Draft202012Parser(JSONSchemaParser):
         "writeOnly": _interpreters.writeOnly,
         "examples": _interpreters.examples,
     }
-    APPLY_ORDER = ["type", "allOf", "anyOf", "oneOf", "properties"]
+    APPLY_ORDER = ["type", "allOf", "anyOf", "oneOf", "properties", "items"]
 
 
 def create_parser(
@@ -158,15 +159,6 @@ def create_parser(
     if isinstance(resolver, bool):
         resolver = default_resolver() if resolver else None
 
+    # TODO: detect spec version from schema
+
     return Draft202012Parser(resolver, ignore_unsupported)
-
-
-def default_resolver() -> NameResolver:
-    return _resolvers.MultiNameResolver(
-        resolvers=[
-            _resolvers.RefBasedNameResolver(),
-            _resolvers.TitleBasedNameResolver(),
-            _resolvers.PropertyNameResolver(),
-            _resolvers.ArrayItemNameResolver(),
-        ]
-    )

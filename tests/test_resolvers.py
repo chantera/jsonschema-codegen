@@ -1,4 +1,4 @@
-from jsonschema_codegen._resolvers import (
+from jsonschema_codegen.resolvers import (
     PropertyNameResolver,
     RefBasedNameResolver,
     TitleBasedNameResolver,
