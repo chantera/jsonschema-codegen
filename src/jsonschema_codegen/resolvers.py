@@ -1,7 +1,6 @@
 from typing import Iterable, Protocol
 from urllib.parse import urldefrag
 
-from jsonschema_codegen import _utils
 from jsonschema_codegen.schema import SchemaDict
 from jsonschema_codegen.types import Context, Schema
 
@@ -19,7 +18,7 @@ class TitleBasedNameResolver:
     def resolve(self, schema: Schema, context: Context | None) -> str | None:
         name = None
         if "title" in schema:
-            name = _utils.snake_to_camel(schema["title"].replace(" ", "_"))
+            name = snake_to_camel(schema["title"].replace(" ", "_"))
         return name
 
 
@@ -36,7 +35,7 @@ class PropertyNameResolver:
 
         property_name = context.path[-1]
         assert isinstance(property_name, str)
-        return context.expr_name + _utils.snake_to_camel(property_name)
+        return context.expr_name + snake_to_camel(property_name)
 
 
 class ArrayItemNameResolver:
@@ -91,3 +90,7 @@ def default_resolver() -> NameResolver:
             ArrayItemNameResolver(),
         ]
     )
+
+
+def snake_to_camel(s: str) -> str:
+    return "".join(x[0].upper() + x[1:] if x else "" for x in s.split("_"))
