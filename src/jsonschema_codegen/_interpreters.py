@@ -3,7 +3,7 @@ from dataclasses import replace
 from enum import Enum
 
 from jsonschema_codegen.exceptions import InterpretError, NotSupportedError, SchemaError
-from jsonschema_codegen.exprs import AnnotatedType, Field, ObjectType, TypeExpr, UnionType
+from jsonschema_codegen.exprs import AnnotatedType, Field, ObjectType, TypeExpr, UndefinedType, UnionType
 from jsonschema_codegen.types import Context, Parser, Schema
 
 
@@ -25,6 +25,16 @@ def _get_type(schema: Schema, default: SchemaType = SchemaType._ANY) -> SchemaTy
     elif isinstance(type_, list):
         raise ValueError(f"multiple types are not supported: {type_}")
     return type_
+
+
+def _expected_type(schema: Schema, type_: SchemaType, strict: bool = False) -> bool:
+    detected_type_ = _get_type(schema)
+    if not strict and detected_type_ == SchemaType._ANY:
+        pass
+    elif detected_type_ != type_:
+        # TODO: show warning
+        return False
+    return True
 
 
 def _any_type(name: str | None = None) -> TypeExpr:
@@ -84,8 +94,12 @@ def prefixItems(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
 
 
 def items(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if _get_type(schema) != SchemaType.ARRAY:
+    if not _expected_type(schema, SchemaType.ARRAY):
         return expr
+
+    if _get_type(schema) == SchemaType._ANY:
+        if not isinstance(expr, UndefinedType):
+            raise InterpretError("invalid array type", schema, "properties")
 
     items_expr = parser.parse(schema["items"], Context(expr.name, schema, ["items"]))
     if items_expr is None:
@@ -102,11 +116,14 @@ def additionalProperties(parser: Parser, expr: TypeExpr, schema: Schema) -> Type
 
 
 def properties(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if _get_type(schema) != SchemaType.OBJECT:
+    if not _expected_type(schema, SchemaType.OBJECT):
         return expr
 
-    if not isinstance(expr, ObjectType):
-        raise InterpretError("invalid object type", schema, "properties")
+    if _get_type(schema) == SchemaType._ANY:
+        if not isinstance(expr, UndefinedType):
+            raise InterpretError("invalid object type", schema, "properties")
+    else:
+        assert isinstance(expr, ObjectType)
 
     fields = []
     for k, v in schema["properties"].items():
@@ -302,10 +319,8 @@ def unevaluatedProperties(parser: Parser, expr: TypeExpr, schema: Schema) -> Typ
 
 
 def required(parser: Parser, expr: TypeExpr, schema: Schema) -> TypeExpr:
-    if _get_type(schema) != SchemaType.OBJECT:
+    if not isinstance(expr, ObjectType):
         return expr
-
-    assert isinstance(expr, ObjectType)
 
     fields = {f.name: f for f in expr.fields}
     for prop in schema["required"]:

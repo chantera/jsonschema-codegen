@@ -21,7 +21,23 @@ def test_interpret():
             Field(name="price", type=AnnotatedType("int"), required=False),
         ],
     )
-    assert parser.parse(SchemaDict(s)) == expected
+    assert parser.parse(s) == expected
+
+    s = {
+        # no explicit type
+        "properties": {
+            "name": {"type": "string"},
+            "price": {"type": "integer"},
+        },
+        "required": ["name"],
+    }
+    expected = ObjectType(
+        fields=[
+            Field(name="name", type=AnnotatedType("str"), required=True),
+            Field(name="price", type=AnnotatedType("int"), required=False),
+        ],
+    )
+    assert parser.parse(s) == expected
 
     s = {
         "type": "array",
@@ -32,7 +48,18 @@ def test_interpret():
     expected = AnnotatedType(
         value=("list", [ObjectType()]),
     )
-    assert parser.parse(SchemaDict(s)) == expected
+    assert parser.parse(s) == expected
+
+    s = {
+        # no explicit type
+        "items": {
+            "type": "object",
+        },
+    }
+    expected = AnnotatedType(
+        value=("list", [ObjectType()]),
+    )
+    assert parser.parse(s) == expected
 
 
 def test_interpret_allOf():

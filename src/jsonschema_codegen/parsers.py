@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from jsonschema_codegen import _interpreters, _resolvers
 from jsonschema_codegen.exceptions import NotSupportedError
-from jsonschema_codegen.exprs import AnnotatedType, TypeExpr
+from jsonschema_codegen.exprs import AnnotatedType, TypeExpr, UndefinedType
 from jsonschema_codegen.schema import SchemaDict
 from jsonschema_codegen.types import Context, Interpreter, NameResolver, Schema
 
@@ -33,12 +33,12 @@ class SchemaParser:
             if schema.ref in self._refs:
                 return self._refs[schema.ref]
 
-            self._refs[schema.ref] = AnnotatedType(TypeExpr())  # set dummy reference
+            self._refs[schema.ref] = AnnotatedType(UndefinedType())  # set dummy reference
             expr = self.parse(schema._resolve(), context)
             object.__setattr__(self._refs[schema.ref], "value", expr)  # set actual reference
             return expr
 
-        expr = TypeExpr(name=self.resolver.resolve(schema, context) if self.resolver else None)
+        expr = UndefinedType(name=self.resolver.resolve(schema, context) if self.resolver else None)
 
         keys = set(schema.keys())
         for keyword, interpreter in self.interpreters.items():
@@ -58,7 +58,7 @@ class SchemaParser:
             if not key.startswith("$"):
                 logger.info(f"undefined keyword: {key}")
 
-        if type(expr) is TypeExpr:
+        if isinstance(expr, UndefinedType):
             return None
 
         return expr

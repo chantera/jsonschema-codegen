@@ -18,9 +18,18 @@ class TypeExpr:
     name: str | None = field(default=None, kw_only=True)
     # metadata: dict[str, Any] | None = None
 
+    def __post_init__(self):
+        if type(self) is TypeExpr:
+            raise TypeError("TypeExpr cannot be instantiated directly")
+
     @property
     def hint(self) -> str:
         raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class UndefinedType(TypeExpr):
+    pass
 
 
 Annotation = Union[str, TypeExpr, "ParameterizedAnnotation"]
