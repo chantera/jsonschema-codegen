@@ -1,4 +1,9 @@
-from jsonschema_codegen._resolvers import PropertyNameResolver, TitleBasedNameResolver
+from jsonschema_codegen._resolvers import (
+    PropertyNameResolver,
+    RefBasedNameResolver,
+    TitleBasedNameResolver,
+)
+from jsonschema_codegen.schema import SchemaDict
 from jsonschema_codegen.types import Context
 
 
@@ -42,3 +47,27 @@ def test_property_name_resolver():
         context = Context("TestObject", schema, ["properties", k])
         name = resolver.resolve(v, context)
         assert name == expected_names[k]
+
+
+def test_ref_based_name_resolver():
+    resolver = RefBasedNameResolver()
+
+    schema = SchemaDict(
+        {
+            "type": "object",
+            "properties": {
+                "test": {"$ref": "#/$defs/TestObject"},
+            },
+            "$defs": {
+                "TestObject": {
+                    "type": "object",
+                },
+            },
+        },
+        default_spec="draft202012",
+        base_uri="",
+    )
+    subschema = schema["properties"]["test"]
+    context = Context(None, subschema, [])
+    name = resolver.resolve(subschema._resolve(), context)
+    assert name == "TestObject"
