@@ -1,8 +1,8 @@
 import argparse
-from contextlib import nullcontext
 import json
 import os
 import sys
+from contextlib import nullcontext
 
 from jsonschema_codegen.compiler import Compiler
 from jsonschema_codegen.generator import CodeGenerator

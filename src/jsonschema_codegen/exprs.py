@@ -1,7 +1,7 @@
-from dataclasses import InitVar, asdict, dataclass, field, fields
-from functools import cached_property
 import hashlib
 import json
+from dataclasses import InitVar, asdict, dataclass, field, fields
+from functools import cached_property
 from typing import Any, Union
 
 
