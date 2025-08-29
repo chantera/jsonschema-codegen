@@ -1,12 +1,12 @@
 from collections.abc import Mapping
 from logging import getLogger
-from typing import ClassVar
+from typing import ClassVar, Type
 
 from jsonschema_codegen import _interpreters
 from jsonschema_codegen.exceptions import NotSupportedError
 from jsonschema_codegen.exprs import AnnotatedType, TypeExpr, UndefinedType
 from jsonschema_codegen.resolvers import NameResolver, default_resolver
-from jsonschema_codegen.schema import SchemaDict
+from jsonschema_codegen.schema import SchemaDict, SchemaVersion
 from jsonschema_codegen.types import Context, Interpreter, Schema
 
 logger = getLogger(__name__)
@@ -150,15 +150,35 @@ class Draft202012Parser(JSONSchemaParser):
     APPLY_ORDER = ["type", "allOf", "anyOf", "oneOf", "properties", "items"]
 
 
+_PARSER_CLASSES: dict[str, Type | None] = {
+    SchemaVersion.DRAFT202012: Draft202012Parser,
+    SchemaVersion.DRAFT201909: None,
+    SchemaVersion.DRAFT07: None,
+    SchemaVersion.DRAFT06: None,
+    SchemaVersion.DRAFT04: None,
+    SchemaVersion.DRAFT03: None,
+}
+
+
 def create_parser(
     schema: Schema | bool | None = None,
     *,
+    default_spec: str | None = None,
     resolver: NameResolver | bool | None = None,
     ignore_unsupported: bool = False,
 ) -> JSONSchemaParser:
     if isinstance(resolver, bool):
         resolver = default_resolver() if resolver else None
 
-    # TODO: detect spec version from schema
+    if schema is None or isinstance(schema, bool):
+        spec = default_spec
+    else:
+        spec = schema.get("$schema", default_spec)
+    if not spec:
+        raise ValueError("Cannot determine schema specification version")
 
-    return Draft202012Parser(resolver, ignore_unsupported)
+    cls = _PARSER_CLASSES.get(spec)
+    if cls is None:
+        raise RuntimeError(f"Unsupported schema specification version: {spec!r}")
+
+    return cls(resolver, ignore_unsupported)

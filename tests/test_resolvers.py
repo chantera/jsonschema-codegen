@@ -3,7 +3,7 @@ from jsonschema_codegen.resolvers import (
     RefBasedNameResolver,
     TitleBasedNameResolver,
 )
-from jsonschema_codegen.schema import SchemaDict
+from jsonschema_codegen.schema import SchemaDict, SchemaVersion
 from jsonschema_codegen.types import Context
 
 
@@ -64,7 +64,7 @@ def test_ref_based_name_resolver():
                 },
             },
         },
-        default_spec="draft202012",
+        default_spec=SchemaVersion.DRAFT202012,
     )
     subschema = schema["properties"]["test"]
     context = Context(None, subschema, [])

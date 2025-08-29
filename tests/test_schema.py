@@ -1,7 +1,7 @@
 import pytest
 import referencing.exceptions
 
-from jsonschema_codegen.schema import create_resolver
+from jsonschema_codegen.schema import SchemaVersion, create_resolver
 
 
 def test_create_resolver():
@@ -37,4 +37,4 @@ def test_create_resolver():
     }
     with pytest.raises(referencing.exceptions.CannotDetermineSpecification):
         resolver = create_resolver(schema)
-    resolver = create_resolver(schema, default_spec="draft202012")
+    resolver = create_resolver(schema, default_spec=SchemaVersion.DRAFT202012)

@@ -121,22 +121,22 @@ def _schema_list(data: list, resolver):
     return ret
 
 
-class SpecVersion(StrEnum):
-    DRAFT202012 = "draft202012"
-    DRAFT201909 = "draft201909"
-    DRAFT07 = "draft07"
-    DRAFT06 = "draft06"
-    DRAFT04 = "draft04"
-    DRAFT03 = "draft03"
+class SchemaVersion(StrEnum):
+    DRAFT202012 = "https://json-schema.org/draft/2020-12/schema"
+    DRAFT201909 = "https://json-schema.org/draft/2019-09/schema"
+    DRAFT07 = "http://json-schema.org/draft-07/schema#"
+    DRAFT06 = "http://json-schema.org/draft-06/schema#"
+    DRAFT04 = "http://json-schema.org/draft-04/schema#"
+    DRAFT03 = "http://json-schema.org/draft-03/schema#"
 
 
 _SPECS = {
-    SpecVersion.DRAFT202012: referencing.jsonschema.DRAFT202012,
-    SpecVersion.DRAFT201909: referencing.jsonschema.DRAFT201909,
-    SpecVersion.DRAFT07: referencing.jsonschema.DRAFT7,
-    SpecVersion.DRAFT06: referencing.jsonschema.DRAFT6,
-    SpecVersion.DRAFT04: referencing.jsonschema.DRAFT4,
-    SpecVersion.DRAFT03: referencing.jsonschema.DRAFT3,
+    SchemaVersion.DRAFT202012: referencing.jsonschema.DRAFT202012,
+    SchemaVersion.DRAFT201909: referencing.jsonschema.DRAFT201909,
+    SchemaVersion.DRAFT07: referencing.jsonschema.DRAFT7,
+    SchemaVersion.DRAFT06: referencing.jsonschema.DRAFT6,
+    SchemaVersion.DRAFT04: referencing.jsonschema.DRAFT4,
+    SchemaVersion.DRAFT03: referencing.jsonschema.DRAFT3,
 }
 
 

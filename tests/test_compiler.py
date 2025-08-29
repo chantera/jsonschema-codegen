@@ -1,23 +1,22 @@
 from textwrap import dedent
 
-import pytest
-
 from jsonschema_codegen.compiler import Compiler
 from jsonschema_codegen.generator import CodeGenerator
 from jsonschema_codegen.parsers import create_parser
-from jsonschema_codegen.schema import SchemaDict
+from jsonschema_codegen.schema import SchemaDict, SchemaVersion
 from jsonschema_codegen.types import Schema
 
 
-@pytest.fixture(scope="module")
-def compiler():
-    parser = create_parser(resolver=True, ignore_unsupported=True)
+def create_compiler(schema):
+    parser = create_parser(
+        schema, default_spec=SchemaVersion.DRAFT202012, resolver=True, ignore_unsupported=True
+    )
     generator = CodeGenerator()
     compiler = Compiler(parser, generator)
     return compiler
 
 
-def test_compile(compiler):
+def test_compile():
     schema: Schema = {
         "title": "product",
         "type": "object",
@@ -37,6 +36,7 @@ def test_compile(compiler):
             price: int
             tags: list[str]
     """)
+    compiler = create_compiler(schema)
     assert compiler.compile(schema) == expected
 
     schema = SchemaDict(
@@ -141,4 +141,5 @@ def test_compile(compiler):
             options: list[str]
             readonly: bool
     """)
+    compiler = create_compiler(schema)
     assert compiler.compile(schema) == expected

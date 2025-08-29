@@ -1,10 +1,17 @@
+import pytest
+
 from jsonschema_codegen.exprs import AnnotatedType, Field, ObjectType, TypeExpr
 from jsonschema_codegen.parsers import create_parser
+from jsonschema_codegen.schema import SchemaVersion
 
 
-def test_interpret():
+@pytest.fixture
+def parser():
+    return create_parser(default_spec=SchemaVersion.DRAFT202012)
+
+
+def test_interpret(parser):
     expected: TypeExpr
-    parser = create_parser()
 
     schema = {
         "type": "object",
@@ -61,9 +68,7 @@ def test_interpret():
     assert parser.parse(schema) == expected
 
 
-def test_interpret_allOf():
-    parser = create_parser()
-
+def test_interpret_allOf(parser):
     schema = {
         "allOf": [
             {
@@ -97,9 +102,7 @@ def test_interpret_allOf():
     assert ret == expected
 
 
-def test_interpret_oneOf():
-    parser = create_parser()
-
+def test_interpret_oneOf(parser):
     schema = {
         "oneOf": [
             {"type": "string"},

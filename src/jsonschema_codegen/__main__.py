@@ -7,7 +7,9 @@ import sys
 from jsonschema_codegen.compiler import Compiler
 from jsonschema_codegen.generator import CodeGenerator
 from jsonschema_codegen.parsers import create_parser
-from jsonschema_codegen.schema import SchemaDict, SpecVersion
+from jsonschema_codegen.schema import SchemaDict, SchemaVersion
+
+DEFAULT_SPEC = SchemaVersion.DRAFT202012
 
 
 def main():
@@ -16,7 +18,7 @@ def main():
     argparser.add_argument("--output", "-o")
     args = argparser.parse_args()
 
-    parser = create_parser(resolver=True, ignore_unsupported=True)
+    parser = create_parser(default_spec=DEFAULT_SPEC, resolver=True, ignore_unsupported=True)
     generator = CodeGenerator()
     compiler = Compiler(parser, generator)
 
@@ -29,7 +31,7 @@ def main():
                 sys.stderr.write(f"Write JSON schema ({eof_hint} to finish):\n> ")
                 sys.stderr.flush()
 
-            schema = SchemaDict(json.loads(sys.stdin.read()), default_spec=SpecVersion.DRAFT202012)
+            schema = SchemaDict(json.loads(sys.stdin.read()), default_spec=DEFAULT_SPEC)
         except json.JSONDecodeError as e:
             print(f"\n{type(e).__module__}.{type(e).__name__}: {e}", file=sys.stderr)
             sys.exit(1)
