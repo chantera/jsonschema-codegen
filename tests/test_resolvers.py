@@ -65,7 +65,6 @@ def test_ref_based_name_resolver():
             },
         },
         default_spec="draft202012",
-        base_uri="",
     )
     subschema = schema["properties"]["test"]
     context = Context(None, subschema, [])

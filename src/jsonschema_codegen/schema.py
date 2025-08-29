@@ -28,13 +28,10 @@ def create_resolver(
         initial_registry = referencing.Registry()
 
     resource = _create_resource(schema, default_spec)
+    uri = base_uri if base_uri else resource.id() or ""
 
-    if base_uri is not None:
-        registry = initial_registry.with_resource(base_uri, resource)
-        return registry.resolver(base_uri)
-    else:
-        registry = resource @ initial_registry
-        return registry.resolver_with_root(resource)
+    registry = initial_registry.with_resource(uri, resource)
+    return registry.resolver(uri)
 
 
 def _resolve_dict(data, resolver):

@@ -7,7 +7,7 @@ import sys
 from jsonschema_codegen.compiler import Compiler
 from jsonschema_codegen.generator import CodeGenerator
 from jsonschema_codegen.parsers import create_parser
-from jsonschema_codegen.schema import SchemaDict
+from jsonschema_codegen.schema import SchemaDict, SpecVersion
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
                 sys.stderr.write(f"Write JSON schema ({eof_hint} to finish):\n> ")
                 sys.stderr.flush()
 
-            schema = SchemaDict(json.loads(sys.stdin.read()))
+            schema = SchemaDict(json.loads(sys.stdin.read()), default_spec=SpecVersion.DRAFT202012)
         except json.JSONDecodeError as e:
             print(f"\n{type(e).__module__}.{type(e).__name__}: {e}", file=sys.stderr)
             sys.exit(1)
