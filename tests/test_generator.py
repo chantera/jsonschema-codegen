@@ -16,10 +16,12 @@ def test_generate():
         ],
     )
     expected = dedent("""\
+        from dataclasses import dataclass
         import typing
 
         Number = typing.Union[int, float]
 
+        @dataclass
         class Product:
             name: str
             price: Number
@@ -36,6 +38,7 @@ def test_generate():
 
     expr = UnionType([AnnotatedType("int"), AnnotatedType("float")], name="Number")
     expected = dedent("""\
+        from dataclasses import dataclass
         import typing
 
         Number = typing.Union[int, float]

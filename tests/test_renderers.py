@@ -39,6 +39,7 @@ def test_object_renderer():
         ],
     )
     expected = dedent("""\
+        @dataclass
         class Product:
             name: str
             price: int
@@ -53,6 +54,7 @@ def test_object_renderer():
         ],
     )
     expected = dedent("""\
+        @dataclass
         class Product:
             name: str
             price: typing.Union[int, float]
@@ -70,6 +72,7 @@ def test_object_renderer():
         ],
     )
     expected = dedent("""\
+        @dataclass
         class Product:
             name: str
             price: Number

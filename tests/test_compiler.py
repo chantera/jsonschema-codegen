@@ -31,6 +31,9 @@ def test_compile():
         "required": ["price"],
     }
     expected = dedent("""\
+        from dataclasses import dataclass
+
+        @dataclass
         class Product:
             name: str
             price: int
@@ -114,27 +117,33 @@ def test_compile():
         }
     )
     expected = dedent("""\
+        from dataclasses import dataclass
         import typing
 
+        @dataclass
         class diskDevice:
             type: typing.Literal['disk']
             device: str
 
+        @dataclass
         class diskUUID:
             type: typing.Literal['disk']
             label: str
 
+        @dataclass
         class nfs:
             type: typing.Literal['nfs']
             remotePath: str
             server: typing.Union[str, str, str]
 
+        @dataclass
         class tmpfs:
             type: typing.Literal['tmpfs']
             sizeInMB: int
 
         FstabEntryStorage = typing.Union[diskDevice, diskUUID, nfs, tmpfs]
 
+        @dataclass
         class FstabEntry:
             storage: FstabEntryStorage
             fstype: typing.Literal['ext3', 'ext4', 'btrfs']
