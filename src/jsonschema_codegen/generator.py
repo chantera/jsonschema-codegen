@@ -2,13 +2,14 @@ from pathlib import Path
 from typing import Iterator
 
 from jsonschema_codegen.exprs import AnnotatedType, Annotation, ObjectType, TypeExpr, UnionType
-from jsonschema_codegen.renderers import AnnotationRenderer, ObjectRenderer
+from jsonschema_codegen.renderers import AnnotationRenderer, ObjectRenderer, get_header
 
 
 class CodeGenerator:
     def __init__(self, template_dir: str | Path | None = None):
         self._exprs: dict[str, TypeExpr] = {}
         self._imports: set[str] = set()
+        self.header = get_header(template_dir)
         self.renderers = {
             AnnotatedType: AnnotationRenderer(template_dir),
             UnionType: AnnotationRenderer(template_dir),
@@ -50,14 +51,14 @@ class CodeGenerator:
 
         imports = []
         for module_str in self._imports:
-            imports.append(f"import {module_str}\n")
-        if imports:
-            buf.append("".join(imports))
+            imports.append(f"import {module_str}")
+
+        buf.append(self.header.render(imports=imports))
 
         for expr in self._exprs.values():
             buf.append(self._render(expr))
 
-        return "\n".join(buf)
+        return "\n".join(s for s in buf if s)
 
     def _render(self, expr: TypeExpr) -> str:
         renderer = self.renderers.get(type(expr))

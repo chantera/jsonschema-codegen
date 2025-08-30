@@ -1,11 +1,35 @@
+from functools import lru_cache
 from pathlib import Path
 from typing import ClassVar
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 from jsonschema_codegen.exprs import AnnotatedType, ObjectType, TypeExpr
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
+
+
+@lru_cache
+def _get_env(template_dir: str) -> Environment:
+    return Environment(
+        loader=FileSystemLoader(template_dir),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+
+
+def _get_template(name: str, template_dir: str | Path | None = None) -> Template:
+    if template_dir is None:
+        template_dir = TEMPLATE_DIR
+    elif isinstance(template_dir, str):
+        template_dir = Path(template_dir)
+
+    env = _get_env(str(template_dir.resolve()))
+    return env.get_template(name)
+
+
+def get_header(template_dir: str | Path | None = None) -> Template:
+    return _get_template("header.jinja2", template_dir)
 
 
 class Renderer:
@@ -15,12 +39,7 @@ class Renderer:
         if not self.TEMPLATE_NAME:
             raise ValueError(f"{self.__class__.__name__}.TEMPLATE_NAME must be set")
 
-        env = Environment(
-            loader=FileSystemLoader(template_dir or TEMPLATE_DIR),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-        self.template = env.get_template(self.TEMPLATE_NAME)
+        self.template = _get_template(self.TEMPLATE_NAME, template_dir)
 
     def render(self, expr: TypeExpr) -> str:
         raise NotImplementedError
