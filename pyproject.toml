@@ -1,5 +1,5 @@
 [project]
-name = "jsonschema-codegen"
+name = "jsonschema-codegen-py"
 description = "Generate Python code from JSON Schema"
 readme = "README.md"
 license = {text = "MIT"}
@@ -31,6 +31,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build]
 exclude = ["/tests"]
 only-packages = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jsonschema_codegen"]
 
 [tool.hatch.version]
 path = "src/jsonschema_codegen/_version.py"
